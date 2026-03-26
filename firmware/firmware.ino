@@ -210,8 +210,7 @@ void configure_ble() {
 
   server->setCallbacks(new ServerHandler());
 
-  BLEDevice::setEncryptionLevel(ESP_BLE_SEC_ENCRYPT_NO_MITM);
-  BLEDevice::setSecurityAuth(ESP_BLE_SEC_AUTH_REQUIRE_NO_MITM);
+  BLEDevice::setPowerLevel(ESP_PWR_LVL_P3);
 
   BLEAdvertising *advertising = BLEDevice::getAdvertising();
   advertising->addServiceUUID(BATTERY_SERVICE_UUID);
@@ -220,6 +219,7 @@ void configure_ble() {
   advertising->setScanResponse(true);
   advertising->setMinPreferred(0x06);
   advertising->setMaxPreferred(0x12);
+  advertising->setAppearance(0x0080);
   BLEDevice::startAdvertising();
 }
 

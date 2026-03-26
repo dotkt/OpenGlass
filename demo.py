@@ -55,7 +55,7 @@ class OpenGlassClient:
         logger.warning("OpenGlass device not found")
         return None
 
-    async def connect(self, device: BLEDevice, max_retries: int = 10):
+    async def connect(self, device: BLEDevice, max_retries: int = 20):
         """连接到 OpenGlass 设备"""
         address = device.address
 
@@ -64,17 +64,17 @@ class OpenGlassClient:
                 f"Connecting to {address} (attempt {attempt + 1}/{max_retries})..."
             )
 
-            self.client = BleakClient(device, timeout=30.0, disconnected_timeout=4.0)
+            self.client = BleakClient(address, timeout=60.0, disconnected_timeout=10.0)
 
             try:
-                await self.client.connect()
+                await self.client.connect(prompt=lambda: None)
 
                 if self.client.is_connected:
                     logger.info(f"✓ Connected to {address}")
                     break
             except Exception as e:
                 logger.warning(f"Connection attempt failed: {e}")
-                await asyncio.sleep(1)
+                await asyncio.sleep(2)
                 continue
         else:
             raise Exception("Failed to connect after max retries")
@@ -121,8 +121,12 @@ class OpenGlassClient:
     async def take_photo(self):
         """拍摄单张照片"""
         logger.info("Sending command: TAKE_PHOTO (0xFF)")
-        await self.client.write_gatt_char(PHOTO_CONTROL_UUID, bytes([255]))
-        logger.info("✓ Command sent")
+        try:
+            await self.client.write_gatt_char(PHOTO_CONTROL_UUID, bytes([255]))
+            logger.info("✓ Command sent")
+        except Exception as e:
+            logger.error(f"Write failed: {e}")
+            raise
 
     async def start_photo_timelapse(self, interval_seconds: int):
         """启动间隔拍照"""
